@@ -156,6 +156,11 @@
       $dk.closest('form').bind('reset', function(){
         $dk.dropkick('reset');
       });
+      
+      // Close if click doesn't come from within
+      $(document).bind('click.dk', function(event){
+        if(!$(event.target).closest($dk).length) $dk.dropkick('close');
+      });
     });
   };
 
@@ -406,5 +411,6 @@
         _handleKeyBoardNav(e, $dk);
       }
     });
+
   });
 })(jQuery, window, document);
