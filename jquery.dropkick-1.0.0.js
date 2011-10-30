@@ -158,8 +158,10 @@
       });
       
       // Close if click doesn't come from within
-      $(document).bind('click.dk', function(event){
-        if(!$(event.target).closest($dk).length) $dk.dropkick('close');
+      $(document).bind('click', function(event){
+        if(!$(event.target).closest($dk).length) {
+          $dk.dropkick('close');
+        } 
       });
     });
   };
@@ -194,6 +196,10 @@
       _updateFields($current, $dk, true);
     }
   };
+
+	methods.close = function () {
+		_closeDropdown($(this).data('dropkick').$dk);
+	}
 
   // Expose the plugin
   $.fn.dropkick = function (method) {
