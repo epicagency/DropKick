@@ -198,7 +198,7 @@
   };
 
 	methods.close = function () {
-		_closeDropdown($(this).data('dropkick').$dk);
+		_closeDropdown(this);
 	}
 
   // Expose the plugin
