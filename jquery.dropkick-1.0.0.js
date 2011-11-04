@@ -88,8 +88,8 @@
         // This gets updated to be equal to the longest <option> element
         width  = settings.width || $select.outerWidth(),
 
-        // Check if we have a tabindex set or not
-        tabindex  = $select.attr('tabindex') ? $select.attr('tabindex') : '',
+        // Check if we have a tabindex set or set to 0 to keep doc flow
+        tabindex  = $select.attr('tabindex') ? $select.attr('tabindex') : '0',
 
         // The completed dk_container element
         $dk = false,
