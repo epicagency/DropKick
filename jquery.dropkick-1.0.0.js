@@ -261,7 +261,7 @@
     data  = $dk.data('dropkick');
 
     $select = data.$select;
-    $select.val(value);
+    $select.val(value).change();
 
     $dk.find('.dk_label').text(label);
 
