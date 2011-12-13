@@ -71,7 +71,7 @@
         // The current <select> element
         $select = $(this),
 
-				$classes = $select.attr('class'),
+        $classes = $select.attr('class'),
 
         // Store a reference to the originally selected <option> element
         $original = $select.find(':selected').first(),
@@ -106,7 +106,7 @@
         data.id        = id;
         data.$original = $original;
         data.$select   = $select;
-				data.$classes  = $classes;
+        data.$classes  = $classes;
         data.value     = _notBlank($select.val()) || _notBlank($original.attr('value'));
         data.label     = $original.text();
         data.options   = $options;
@@ -150,7 +150,7 @@
       });
 
       setTimeout(function () {
-        $select.hide();
+        $select.css('position': 'absolute');
       }, 0);
 
       $dk.closest('form').bind('reset', function(){
@@ -197,9 +197,9 @@
     }
   };
 
-	methods.close = function () {
-		_closeDropdown(this);
-	}
+  methods.close = function () {
+    _closeDropdown(this);
+  }
 
   // Expose the plugin
   $.fn.dropkick = function (method) {
@@ -329,7 +329,7 @@
     ;
 
     template = template.replace('{{ id }}', view.id);
-		template = template.replace('{{ classes }}', view.$classes);
+    template = template.replace('{{ classes }}', view.$classes);
     template = template.replace('{{ label }}', view.label);
     template = template.replace('{{ tabindex }}', view.tabindex);
 
