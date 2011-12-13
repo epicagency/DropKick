@@ -150,7 +150,7 @@
       });
 
       setTimeout(function () {
-        $select.css('position': 'absolute');
+        $select.css('position', 'absolute');
       }, 0);
 
       $dk.closest('form').bind('reset', function(){
