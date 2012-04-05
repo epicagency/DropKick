@@ -37,7 +37,7 @@
 
     // HTML template for the dropdowns
     dropdownTemplate = [
-      '<div class="dk_container" id="dk_container_{{ id }}" tabindex="{{ tabindex }}">',
+      '<div class="dk_container {{ classes }}" id="dk_container_{{ id }}" tabindex="{{ tabindex }}">',
         '<a class="dk_toggle">',
           '<span class="dk_label">{{ label }}</span>',
         '</a>',
@@ -71,6 +71,8 @@
         // The current <select> element
         $select = $(this),
 
+        $classes = $select.attr('class'),
+
         // Store a reference to the originally selected <option> element
         $original = $select.find(':selected').first(),
 
@@ -86,8 +88,8 @@
         // This gets updated to be equal to the longest <option> element
         width  = settings.width || $select.outerWidth(),
 
-        // Check if we have a tabindex set or not
-        tabindex  = $select.attr('tabindex') ? $select.attr('tabindex') : '',
+        // Check if we have a tabindex set or set to 0 to keep doc flow
+        tabindex  = $select.attr('tabindex') ? $select.attr('tabindex') : '0',
 
         // The completed dk_container element
         $dk = false,
@@ -104,6 +106,7 @@
         data.id        = id;
         data.$original = $original;
         data.$select   = $select;
+        data.$classes  = $classes;
         data.value     = _notBlank($select.val()) || _notBlank($original.attr('value'));
         data.label     = $original.text();
         data.options   = $options;
@@ -113,7 +116,7 @@
       $dk = _build(dropdownTemplate, data);
 
       // Make the dropdown fixed width if desired
-      $dk.find('.dk_toggle').css({
+      $dk.css({
         'width' : width + 'px'
       });
 
@@ -147,8 +150,19 @@
       });
 
       setTimeout(function () {
-        $select.hide();
+        $select.css('position', 'absolute');
       }, 0);
+
+      $dk.closest('form').bind('reset', function(){
+        $dk.dropkick('reset');
+      });
+      
+      // Close if click doesn't come from within
+      $(document).bind('click', function(event){
+        if(!$(event.target).closest($dk).length) {
+          $dk.dropkick('close');
+        } 
+      });
     });
   };
 
@@ -182,6 +196,10 @@
       _updateFields($current, $dk, true);
     }
   };
+
+  methods.close = function () {
+    _closeDropdown(this);
+  }
 
   // Expose the plugin
   $.fn.dropkick = function (method) {
@@ -324,6 +342,7 @@
     ;
 
     template = template.replace('{{ id }}', view.id);
+    template = template.replace('{{ classes }}', view.$classes);
     template = template.replace('{{ label }}', view.label);
     template = template.replace('{{ tabindex }}', view.tabindex);
 
@@ -411,5 +430,6 @@
         _handleKeyBoardNav(e, $dk);
       }
     });
+
   });
 })(jQuery, window, document);
