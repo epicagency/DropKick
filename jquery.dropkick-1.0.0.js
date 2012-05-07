@@ -18,7 +18,7 @@
   } else {
     document.documentElement.className = document.documentElement.className + ' dk_fouc';
   }
-  
+
   var
     // Public methods exposed to $.fn.dropkick()
     methods = {},
@@ -43,10 +43,10 @@
         '<a class="dk_toggle">',
           '<span class="dk_label">{{ label }}</span>',
         '</a>',
-        '<div class="dk_options">',
-          '<ul class="dk_options_inner">',
-          '</ul>',
-        '</div>',
+      '</div>',
+      '<div class="dk_options" id="dk_options_{{ id }}" data-container="dk_container_{{ id }}">',
+        '<ul class="dk_options_inner">',
+        '</ul>',
       '</div>'
     ].join(''),
 
@@ -96,6 +96,8 @@
         // The completed dk_container element
         $dk = false,
 
+        $dk_options = false,
+
         theme
       ;
 
@@ -121,6 +123,9 @@
       $dk.find('.dk_toggle').css({
         'width' : width + 'px'
       });
+      $dk_options = $dk.filter('.dk_options');
+      $dk_options.appendTo('body');
+      $dk = $dk.filter('.dk_container');
 
       // Hide the <select> list and place our new one in front of it
       $select.before($dk);
@@ -135,6 +140,7 @@
 
       // Save the updated $dk reference into our data object
       data.$dk = $dk;
+      data.$dk_options = $dk_options;
 
       // Save the dropkick data onto the <select> element
       $select.data('dropkick', data);
@@ -144,11 +150,23 @@
 
       lists[lists.length] = $select;
 
+      var _blur = function() {
+        $dk.removeClass('dk_open dk_focus');
+        $dk_options.removeClass('dk_open');
+      }
+      var _blurtimeout = null;
       // Focus events
       $dk.bind('focus.dropkick', function (e) {
         $dk.addClass('dk_focus');
+        clearTimeout(_blurtimeout);
       }).bind('blur.dropkick', function (e) {
-        $dk.removeClass('dk_open dk_focus');
+        _blurtimeout = setTimeout(_blur, 100);
+      });
+      $dk_options.bind('focus.dropkick', function (e) {
+        $dk.addClass('dk_focus');
+        clearTimeout(_blurtimeout);
+      }).bind('blur.dropkick', function (e) {
+        _blurtimeout = setTimeout(_blur, 100);
       });
 
       setTimeout(function () {
@@ -158,12 +176,13 @@
       $dk.closest('form').bind('reset', function(){
         $dk.dropkick('reset');
       });
-      
+
       // Close if click doesn't come from within
-      $(document).bind('click', function(event){
-        if(!$(event.target).closest($dk).length) {
+      $('body').on('click', function(event){
+        var $target = $(event.target);
+        if(!$target.closest($dk).length && !$target.closest($dk_options).length) {
           $dk.dropkick('close');
-        } 
+        }
       });
     });
   };
@@ -171,13 +190,15 @@
   // Allows dynamic theme changes
   methods.theme = function (newTheme) {
     var
-      $select   = $(this),
-      list      = $select.data('dropkick'),
-      $dk       = list.$dk,
-      oldtheme  = 'dk_theme_' + list.theme
+      $select     = $(this),
+      list        = $select.data('dropkick'),
+      $dk         = list.$dk,
+      $dk_options = list.$dk_options,
+      oldtheme    = 'dk_theme_' + list.theme
     ;
 
     $dk.removeClass(oldtheme).addClass('dk_theme_' + newTheme);
+    $dk_options.removeClass(oldtheme).addClass('dk_theme_' + newTheme);
 
     list.theme = newTheme;
   };
@@ -186,13 +207,14 @@
   methods.reset = function () {
     for (var i = 0, l = lists.length; i < l; i++) {
       var
-        listData  = lists[i].data('dropkick'),
-        $dk       = listData.$dk,
-        $current  = $dk.find('li').first()
+        listData    = lists[i].data('dropkick'),
+        $dk         = listData.$dk,
+        $dk_options = listData.$dk_options,
+        $current    = $dk_options.find('li').first()
       ;
 
       $dk.find('.dk_label').text(listData.label);
-      $dk.find('.dk_options_inner').animate({ scrollTop: 0 }, 0);
+      $dk_options.find('.dk_options_inner').animate({ scrollTop: 0 }, 0);
 
       _setCurrent($current, $dk);
       _updateFields($current, $dk, true);
@@ -219,11 +241,11 @@
     var
       code     = e.keyCode,
       data     = $dk.data('dropkick'),
-      options  = $dk.find('.dk_options'),
+      options  = data.$dk_options,
       letter   = String.fromCharCode(code),
       open     = $dk.hasClass('dk_open'),
       lis	     = options.find('li'),
-      current  = $dk.find('.dk_option_current'),
+      current  = options.find('.dk_option_current'),
       first    = lis.first(),
       last     = lis.last(),
       next,
@@ -272,7 +294,7 @@
       default:
       break;
     }
-    
+
     //if typing a letter
     if (code >= keyMap.zero && code <= keyMap.z) {
       //update data
@@ -327,7 +349,7 @@
 
   // Set the currently selected option
   function _setCurrent($current, $dk) {
-    $dk.find('.dk_option_current').removeClass('dk_option_current');
+    $dk.data('dropkick').$dk_options.find('.dk_option_current').removeClass('dk_option_current');
     $current.addClass('dk_option_current');
 
     _setScrollPos($dk, $current);
@@ -335,32 +357,29 @@
 
   function _setScrollPos($dk, anchor) {
     var height = anchor.prevAll('li').outerHeight() * anchor.prevAll('li').length;
-    $dk.find('.dk_options_inner').animate({ scrollTop: height + 'px' }, 0);
+    $dk.data('dropkick').$dk_options.find('.dk_options_inner').animate({ scrollTop: height + 'px' }, 0);
   }
 
   // Close a dropdown
   function _closeDropdown($dk) {
     $dk.removeClass('dk_open');
-  }
-
-  // Report whether there is enough space in the window to drop down.
-  function _enoughSpaceBelow($dk) {
-    var
-      $dk_toggle = $dk.find('.dk_toggle'),
-      optionsHeight = $dk.find('.dk_options').outerHeight(),
-      spaceBelow = $(window).height() - $dk_toggle.outerHeight() - $dk_toggle.offset().top
-    ;
-    return optionsHeight < spaceBelow;
+    $dk.data('dropkick').$dk_options.removeClass('dk_open');
   }
 
   // Open a dropdown
   function _openDropdown($dk) {
     var data = $dk.data('dropkick');
-    $dk.find('.dk_options').css({
-      top : _enoughSpaceBelow($dk) ? $dk.find('.dk_toggle').outerHeight() - 1 : '',
-      bottom : _enoughSpaceBelow($dk) ? '' : $dk.find('.dk_toggle').outerHeight() - 1
+    var offset = $dk.offset();
+    var width = $dk.width();
+    var toggle_height = $dk.find('.dk_toggle').outerHeight();
+    // TODO: Display above if needed
+    data.$dk_options.css({
+      top   : (offset.top + toggle_height - 1) + 'px',
+      left  : offset.left + 'px',
+      width : width + 'px',
     });
-    $dk.toggleClass('dk_open');
+    $dk.addClass('dk_open');
+    data.$dk_options.addClass('dk_open');
 
   }
 
@@ -376,7 +395,7 @@
       $dk
     ;
 
-    template = template.replace('{{ id }}', view.id);
+    template = template.replace(/\{\{ id \}\}/g, view.id);
     template = template.replace('{{ classes }}', view.$classes);
     template = template.replace('{{ label }}', view.label);
     template = template.replace('{{ tabindex }}', view.tabindex);
@@ -410,34 +429,34 @@
   $(function () {
 
     // Handle click events on the dropdown toggler
-    $('.dk_toggle').live('click', function (e) {
-      var $dk  = $(this).parents('.dk_container').first();
+    $('body').on('click', '.dk_toggle', function (e) {
+      var $dk  = $(this).closest('.dk_container');
+      var $dk_options = $dk.data('dropkick').$dk_options;
 
       _openDropdown($dk);
 
       if ("ontouchstart" in window) {
         $dk.addClass('dk_touch');
-        $dk.find('.dk_options_inner').addClass('scrollable vertical');
+        $dk_options.addClass('dk_touch');
+        $dk_options.find('.dk_options_inner').addClass('scrollable vertical');
       }
 
       e.preventDefault();
-      return false;
     });
 
     // Handle click events on individual dropdown options
-    $('.dk_options a').live(($.browser.msie ? 'mousedown' : 'click'), function (e) {
+    $('body').on(($.browser.msie ? 'mousedown' : 'click'), '.dk_options a', function (e) {
       var
         $option = $(this),
-        $dk     = $option.parents('.dk_container').first(),
+        $dk     = $('#'+$option.closest('.dk_options').data('container')),
         data    = $dk.data('dropkick')
       ;
-    
+
       _closeDropdown($dk);
       _updateFields($option, $dk);
       _setCurrent($option.parent(), $dk);
-    
+
       e.preventDefault();
-      return false;
     });
 
     // Setup keyboard nav
